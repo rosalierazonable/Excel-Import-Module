@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
+//import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.xssf.usermodel.*;
 import org.springframework.stereotype.Service;
 
@@ -45,14 +46,24 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 			String excelFilePath = excelDirPath + "//" + fName;
 			FileInputStream inputStream = new FileInputStream(excelFilePath);
 			
+			
 			@SuppressWarnings("resource")
-			XSSFWorkbook workbook = new XSSFWorkbook(inputStream);
+			XSSFWorkbook workbook = new XSSFWorkbook(inputStream); // non-password protected files
+			
+			/* 
+			 * uncomment if files are password-protected
+			 * 
+			 * String password = "asi-rdak";
+			 * XSSFWorkbook workbook = (XSSFWorkbook) WorkbookFactory.create(inputStream, password);
+			 * 
+			 */
+			 
 			XSSFSheet sheet = workbook.getSheetAt(0);
 			
 			Iterator<Row> iterator = sheet.iterator();
 			
 			while(iterator.hasNext()) {
-				XSSFRow row = (XSSFRow) iterator.next(); // will return the row and store in a variable
+				XSSFRow row = (XSSFRow) iterator.next(); 
 				
 				Iterator<Cell> cellIterator = row.cellIterator();
 				

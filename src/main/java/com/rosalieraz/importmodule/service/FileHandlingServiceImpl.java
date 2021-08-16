@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class FileHandlingServiceImpl implements FileHandlingService {
 
-	private String excelDirPath = ".\\src\\main\\resources\\static\\excel-files";
+	private String excelDirPath = ".\\src\\main\\resources\\static\\files\\";
 	
 	@Override
 	public List<String> getFileList () {
@@ -43,7 +43,7 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 		
 		for(String fName: fileNames) {
 			
-			String excelFilePath = excelDirPath + "//" + fName;
+			String excelFilePath = excelDirPath + fName;
 			FileInputStream inputStream = new FileInputStream(excelFilePath);
 			
 			

@@ -28,6 +28,22 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 	
 	
 	/*
+	 * Get File Extension
+	 */
+	
+	@Override
+	public String getExtension(String fileName) {
+		String extension = "";
+
+		if (fileName.contains("."))
+		     extension = fileName.substring(fileName.lastIndexOf(".") + 1);
+		
+		return extension;
+	}
+	
+	
+	
+	/*
 	 * List all Excel Files inside Files Directory
 	 */
 
@@ -40,12 +56,11 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 		File[] fileList = dir.listFiles(); // list of files inside the files directory
 
 		for (File file : fileList) {
-			if (file.isFile())
-				fileNames.add(file.getName());
+			if (file.isFile() && getExtension(file.getName()).equalsIgnoreCase("xlsx"))
+					fileNames.add(file.getName());
 		}
 
 		return fileNames; // list of file names inside the files directory
-
 	}
 
 	
@@ -56,15 +71,11 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 
 	@Override
 	 public List<List<Events>> loopThroughFiles() throws IOException {
-//	public void loopThroughFiles() throws IOException {
 
 		List<String> fileNames = getFileList();
 		List<List<Events>> eventsList = new ArrayList<>();
+		HashMap<String, Object> config = new HashMap<>(); // to accommodate multiple config details in the future		
 		
-		HashMap<String, Object> config = new HashMap<>();
-
-//		List<HashMap<String, Object>> configs = new ArrayList<>();
-
 		for (String fName : fileNames) {
 
 			String excelFilePath = excelDirPath + fName;
@@ -73,12 +84,28 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 			XSSFWorkbook workbook = new XSSFWorkbook(inputStream);
 
 			config = readingConfigDetails(workbook);
-//			configs.add(readingConfigDetails(workbook));
 
-			eventsList.add(readingData(workbook));
-			
+			switch (config.get("Table ").toString()) {
+
+				case "Events":
+					eventsList.add(readingEventsTable(workbook));
+					break;
+	
+				case "Members": // call corresponding reading function for members
+					break;
+	
+				case "Partners": // call corresponding reading function for partners here
+					break;
+	
+				// add cases here for additional tables	
+					
+				default:
+					break;
+
+			}
+			 
 		}
-		System.out.println("size: " + eventsList.size());
+
 		return eventsList;
 	}
 
@@ -91,7 +118,6 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 	@Override
 	public HashMap<String, Object> readingConfigDetails(XSSFWorkbook workbook) throws IOException {
 
-		// Reading the Config Details
 		XSSFSheet configSheet = workbook.getSheet("Config");
 		HashMap<String, Object> configDetails = new HashMap<>();
 
@@ -131,6 +157,8 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 			}
 		}
 
+//		System.out.println(configDetails.get("Table").toString());
+		
 		return configDetails;
 
 	}
@@ -142,15 +170,11 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 	 */
 
 	@Override
-	public List<Events> readingData(XSSFWorkbook workbook) throws IOException {
+	public List<Events> readingEventsTable (XSSFWorkbook workbook) throws IOException {
 
 		List<Events> eventsList = new ArrayList<>();
-//		DateTimeFormatter myFormatObj = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
 		XSSFSheet dataSheet = workbook.getSheet("Data");
 		
-		/*
-		 * int rowNum = dataSheet.getLastRowNum(); System.out.println(rowNum);
-		 */
 		Iterator<Row> iterator = dataSheet.iterator();
 		
 		iterator.next();
@@ -176,7 +200,6 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 			String location = "";
 			
 			XSSFRow row = (XSSFRow) iterator.next();
-			
 			Iterator<Cell> cellIterator = row.cellIterator();
 			
 			while (cellIterator.hasNext()) {
@@ -278,17 +301,8 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 					default:
 						break;
 				}
-				
-				
-				/*
-				 * switch (cell.getCellType()) {
-				 * 
-				 * case STRING: System.out.print(cell.getStringCellValue()); break; case
-				 * BOOLEAN: System.out.print(cell.getBooleanCellValue()); break; case NUMERIC:
-				 * System.out.print(cell.getNumericCellValue()); break; case BLANK: // NULL
-				 * break; default: break; } System.out.print(" | ");
-				 */
 			}
+			
 			eventsList.add(new Events(id, type, title, banner, description, startDate, endDate, regStart, regEnd, createDate, 
 						updateDate, createUserId, updateUserId, isDeleted, isInternal, paymentFee, rideId, location));
 		}
@@ -296,5 +310,9 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 		return eventsList;
 
 	}
+
+
+
+	
 
 }

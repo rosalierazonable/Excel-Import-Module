@@ -1,10 +1,18 @@
 package com.rosalieraz.importmodule.controller;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-/*import java.io.IOException;
-import java.util.HashMap;*/
+/*
+ * import java.util.HashMap;
+ * import java.io.IOException;
+ * import java.util.HashMap;
+ */
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,7 +32,6 @@ public class ExcelController {
 	private EventsRepository eRepository;
 
 	
-	
 	/*
 	 * Get List of Files
 	 */
@@ -34,16 +41,25 @@ public class ExcelController {
 		return fhService.getFileList();
 	}
 	
+	/*
+	 * Get Configs
+	 */
 	
+	@GetMapping("/configs")
+	public Map<String, Object> getConfigs () throws IOException {
+		
+		return fhService.readingConfigDetails(new XSSFWorkbook(new FileInputStream(".\\src\\main\\resources\\static\\files\\Events1.xlsx")));
+	}
 	
 	/*
 	 * Add Events from Excel
 	 */
 	
 	@PostMapping("/addEvents") 
-	public void getEvents () throws IOException { 
-		List<List<Events>> eventsList = fhService.loopThroughFiles();
-		for(List<Events> events: eventsList)
-			eRepository.saveAll(events);
+	public void addEvents () throws IOException { 
+		
+		  List<List<Events>> eventsList = fhService.loopThroughFiles();
+		  for(List<Events> events: eventsList) eRepository.saveAll(events);
+		 
 	}
 }

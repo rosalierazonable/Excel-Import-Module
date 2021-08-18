@@ -12,11 +12,12 @@ public interface FileHandlingService {
 
 	List<String> getFileList ();
 	
+	String getExtension (String fileName);
+	
 	HashMap<String, Object> readingConfigDetails (XSSFWorkbook workbook ) throws IOException;
 	
-	Object readingData (XSSFWorkbook workbook) throws IOException;
+	List<Events> readingEventsTable (XSSFWorkbook workbook) throws IOException;
 	
 	List<List<Events>> loopThroughFiles () throws IOException;
 	
-//	List<HashMap<String, Object>> loopThroughFiles () throws IOException;
 }

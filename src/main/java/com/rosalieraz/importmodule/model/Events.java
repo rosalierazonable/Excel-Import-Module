@@ -12,6 +12,8 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.PositiveOrZero;
+import javax.validation.constraints.Size;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -25,36 +27,39 @@ public class Events {
 	@Column(name = "eventId", columnDefinition = "int(11)", nullable = false)
 	private Integer id;
 
-	@NotNull
-	@Column(name = "eventType", nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
+//	@NotNull(message = "eventType field is required thus, it should not be null")
+	@Column(name = "eventType", columnDefinition = "TINYINT(1) DEFAULT 0", nullable = false)
+	@PositiveOrZero
 	private Integer type;
 
-	@NotBlank
-	@Column(name = "eventTitle", length = 50, nullable = false)
+	@NotBlank(message = "eventTitle field should neither be empty nor blank")
+	@Column(name = "eventTitle", nullable = false)
+	@Size(min = 1, max = 50, message = "eventTitle field should not exceed 50 characters")
 	private String title;
 
-//	@NotBlank
-	@Column(length = 50, nullable = false)
+	@NotBlank(message = "banner field should neither be empty nor blank")
+//	@Size(min = 1, max = 50, message = "banner field should not exceed 50 characters")
 	private String banner;
 
-	@NotBlank
-	@Column(length = 250, nullable = false)
+	@NotBlank(message = "description field should neither be empty nor blank")
+//	@Size(min = 1, max = 250, message = "description field should not exceed 250 characters")
+	@Column(nullable = false)
 	private String description;
 
-	@NotNull
+	@NotNull(message = "startDate field is required")
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date startDate;
 
-	@NotNull
+	@NotNull(message = "endDate field is required")
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date endDate;
 
-	@NotNull
+	@NotNull(message = "registrationStart field is required")
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "registrationStart")
 	private Date regStart;
 
-	@NotNull
+	@NotNull(message = "registrationEnd field is required")
 	@Temporal(TemporalType.TIMESTAMP)
 	@Column(name = "registrationEnd")
 	private Date regEnd;
@@ -67,34 +72,36 @@ public class Events {
 	@Column(updatable = false, nullable = false, columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
 	private Date updateDate;
 
-	@NotNull
+	@NotNull(message = "createUserId field is required")
 	@Column(columnDefinition = "int(11)", nullable = false)
 	private Integer createUserId;
 
-	@NotNull
+	@NotNull(message = "updateUserId field is required")
 	@Column(columnDefinition = "int(11)", nullable = false)
 	private Integer updateUserId;
 
-	@NotNull
+	@PositiveOrZero
+	@NotNull(message = "isDeleted field is required")
 	@Column(nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
 	private Integer isDeleted;
 
-	@NotNull
+	@PositiveOrZero
+	@NotNull(message = "isInternal field is required")
 	@Column(nullable = false, columnDefinition = "TINYINT(1)  DEFAULT 0")
 	private Integer isInternal;
 
 	@Column(precision = 4)
 	private float paymentFee;
 
-	@NotBlank
+	@NotBlank(message = "rideId field should neither be empty nor blank")
 	@Column(length = 100)
 	private String rideId;
 
-	@NotBlank
-	@Column(nullable = false, length = 50)
+	
+	@NotBlank(message = "location field should neither be empty nor blank")
+	@Column(nullable = false)
 	private String location;
 
-	
 	/*
 	 * Constructors
 	 */
@@ -130,7 +137,6 @@ public class Events {
 		this.location = location;
 	}
 
-	
 	/*
 	 * Getters and Setters
 	 */

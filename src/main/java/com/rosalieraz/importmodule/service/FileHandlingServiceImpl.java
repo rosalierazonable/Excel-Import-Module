@@ -3,18 +3,20 @@ package com.rosalieraz.importmodule.service;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.poi.ss.usermodel.Cell;
+//import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 //import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.xssf.usermodel.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.rosalieraz.importmodule.model.Events;
@@ -25,10 +27,12 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 	// Files Directory Path
 	private String excelDirPath = ".\\src\\main\\resources\\static\\files\\";
 
-	
+	@Autowired
+	private EventsUtilityService validator;
 	
 	/*
-	 * Get File Extension
+	 * Get File Extension,
+	 * It accommodates the fact that the admin may include files that are not of xlsx type
 	 */
 	
 	@Override
@@ -74,7 +78,7 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 
 		List<String> fileNames = getFileList();
 		List<List<Events>> eventsList = new ArrayList<>();
-		HashMap<String, Object> config = new HashMap<>(); // to accommodate multiple config details in the future		
+		Map<String, Object> config; // to accommodate multiple config details in the future		
 		
 		for (String fName : fileNames) {
 
@@ -88,7 +92,12 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 			switch (config.get("Table ").toString()) {
 
 				case "Events":
-					eventsList.add(readingEventsTable(workbook));
+					// Set Fields so that, enum fields can be traced easier
+					ArrayList<String> eventFields = new ArrayList<>(Arrays.asList("eventId", "eventType", "eventTitle", "banner", "description", "startDate",
+																	"endDate", "regStart", "regEnd", "createDate", "updateDate", "createUserId", 
+																	"updateUserId", "isDeleted", "isInternal", "paymentFee", "rideId", "location"));
+					
+					eventsList.add(readingEventsTable(workbook, eventFields));
 					break;
 	
 				case "Members": // call corresponding reading function for members
@@ -116,10 +125,10 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 	 */
 
 	@Override
-	public HashMap<String, Object> readingConfigDetails(XSSFWorkbook workbook) throws IOException {
+	public Map<String, Object> readingConfigDetails(XSSFWorkbook workbook) throws IOException {
 
 		XSSFSheet configSheet = workbook.getSheet("Config");
-		HashMap<String, Object> configDetails = new HashMap<>();
+		Map<String, Object> configDetails = new HashMap<>();
 
 		Iterator<Row> configItr = configSheet.iterator();
 
@@ -146,7 +155,7 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 					break;
 
 				case NUMERIC:
-					value = (int) cell.getNumericCellValue();
+					value = cell.getNumericCellValue();
 					break;
 
 				default:
@@ -156,28 +165,26 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 				configDetails.put(keyStr, value);
 			}
 		}
-
-//		System.out.println(configDetails.get("Table").toString());
 		
 		return configDetails;
-
 	}
 
-	
 	
 	/*
 	 * Read Table Data from Data Sheet per Excel File
 	 */
 
 	@Override
-	public List<Events> readingEventsTable (XSSFWorkbook workbook) throws IOException {
+	public List<Events> readingEventsTable (XSSFWorkbook workbook, ArrayList<String> eventFields) throws IOException {
 
 		List<Events> eventsList = new ArrayList<>();
 		XSSFSheet dataSheet = workbook.getSheet("Data");
 		
 		Iterator<Row> iterator = dataSheet.iterator();
+		iterator.next(); // skip headers
 		
-		iterator.next();
+		validator.setValidationRules("eventId");
+		
 		while (iterator.hasNext()) {
 			
 			Integer id = 0;
@@ -203,99 +210,85 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 			Iterator<Cell> cellIterator = row.cellIterator();
 			
 			while (cellIterator.hasNext()) {
+			
 				XSSFCell cell = (XSSFCell) cellIterator.next();
 				int cellIndex = cell.getColumnIndex();
 				
 				switch(cellIndex) {
 					
 					case 0:
-						id = (int) cell.getNumericCellValue();
-						System.out.println("id: " + id);
+						// if(validator.validation(0, cell.getNumericCellValue()) != null )
+							id = (int) cell.getNumericCellValue();
 						break;
 						
 					case 1:
-						type = (int) cell.getNumericCellValue();
-						System.out.println("type: " + type);
+							type = (int) readingEnums(workbook, eventFields.get(cellIndex)).get(cell.getStringCellValue());
 						break;
 						
 					case 2:
-						title = cell.getStringCellValue();
-						System.out.println("title: " + title);
+						// if(validator.validation(2, cell.getStringCellValue()) != null)
+								title = cell.getStringCellValue();
 						break;
 						
 					case 3:
-						banner = cell.getStringCellValue();
-						System.out.println("banner: " + banner);
+						// if(validator.validation(3, cell.getStringCellValue()) != null && cell.getCellType() != CellType.BLANK)
+								banner = cell.getStringCellValue();
 						break;
 					
 					case 4:
 						description = cell.getStringCellValue();
-						System.out.println("description: " + description);
 						break;
 						
 					case 5: 
 						startDate = cell.getDateCellValue();
-						System.out.println("startDate: " + startDate);
 						break;
 				
 					case 6: 
 						endDate = cell.getDateCellValue();
-						System.out.println("endDate: " + endDate);
 						break;
 						
 					case 7: 
 						regStart= cell.getDateCellValue();
-						System.out.println("regStart: " + regStart);
 						break;
 
 					case 8: 
 						regEnd = cell.getDateCellValue();
-						System.out.println("regEnd: " + regEnd);
 						break;
 
 					case 9: 
 						createDate = cell.getDateCellValue();
-						System.out.println("createDate: " + createDate);
 						break;
 						
 					case 10: 
 						updateDate = cell.getDateCellValue();
-						System.out.println("updateDate: " + updateDate);
 						break;
 						
 					case 11:
 						createUserId = (int) cell.getNumericCellValue();
-						System.out.println("createUserId: " + createUserId);
 						break;
 						
 					case 12:
 						updateUserId = (int) cell.getNumericCellValue();
-						System.out.println("updateUserId: " + updateUserId);
 						break;
 						
 					case 13:
 						isDeleted = (int) cell.getNumericCellValue();
-						System.out.println("isDeleted: " + isDeleted);
 						break;
 						
 					case 14:
 						isInternal = (int) cell.getNumericCellValue();
-						System.out.println("isInternal: " + isInternal);
 						break;
 						
 					case 15:
 						paymentFee = (float) cell.getNumericCellValue();
-						System.out.println("paymentFee: " + paymentFee);
 						break;
 						
 					case 16:
 						rideId = cell.getStringCellValue();
-						System.out.println("rideId: " + rideId);
 						break;
 					
 					case 17:
 						location = cell.getStringCellValue();
-						System.out.println("location: " + location);
 						break;
 						
 					default:
@@ -312,7 +305,39 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 	}
 
 
+	/*
+	 * Reading Corresponding Enums
+	 */
+	
+	@Override
+	public Map<String, Integer> readingEnums(XSSFWorkbook workbook, String field) {
+		
+		XSSFSheet enumSheet = workbook.getSheet(field);
+		Map<String, Integer> enums = new HashMap<>();
+		
+		Iterator<Row> configItr = enumSheet.iterator();
 
+		while (configItr.hasNext()) {
+			XSSFRow row = (XSSFRow) configItr.next();
+			String keyStr = null;
+			Integer value = null;
+
+			keyStr = row.getCell(0).getStringCellValue();
+			value = (int) row.getCell(1).getNumericCellValue();
+		
+
+			enums.put(keyStr, value);
+		}
+		
+		return enums;
+	}
+	
 	
 
+	/*
+	 * @Override public void writeIntoExcel() {
+	 * 
+	 * 
+	 * }
+	 */
 }

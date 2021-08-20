@@ -1,6 +1,6 @@
 # Excel-Import-Module Intership Task
 
-### Tech Stack, APIs and Libraries
+## Tech Stack, APIs and Libraries
 - Spring MVC
 - SpringBoot
 - JPA
@@ -28,6 +28,7 @@ Assume a particular directory has five subdirectories:
 - Images// : established image directory
 - Processed// : directory which holds the logging of processed excel files
 - Server// : mocks the server directory where images should be moved
+
 
 ![Swim Lane Architecture  - RDAK Import Module](https://user-images.githubusercontent.com/80081189/130224744-de1bb620-652a-4473-a01e-ef1b1aa8c6d3.jpg)
 

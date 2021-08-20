@@ -7,8 +7,6 @@ import java.util.Map;
 
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
-import com.rosalieraz.importmodule.model.Events;
-
 public interface FileHandlingService {
 
 	String getExtension (String fileName);
@@ -25,8 +23,8 @@ public interface FileHandlingService {
 
 	List<Object[]>  writeIntoExcel (List<Object[]> errors) throws IOException;
 
-	List<Events> readingEventsTable (XSSFWorkbook workbook, ArrayList<String> eventFields) throws IOException;
+	List<Object[]> readingEventsTable (XSSFWorkbook workbook, ArrayList<String> eventFields, String identifier) throws IOException;
 	
-	List<List<Events>> loopThroughFiles () throws IOException;
+	void loopThroughFiles () throws IOException;
 	
 }

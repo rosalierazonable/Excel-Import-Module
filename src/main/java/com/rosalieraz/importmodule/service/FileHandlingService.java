@@ -11,18 +11,22 @@ import com.rosalieraz.importmodule.model.Events;
 
 public interface FileHandlingService {
 
-	List<String> getFileList ();
-	
 	String getExtension (String fileName);
+
+	List<String> getFileList (String excelDirPath, String extension);
 	
 	Map<String, Object> readingConfigDetails (XSSFWorkbook workbook ) throws IOException;
 	
+	Map<String, Integer> readingEnums (XSSFWorkbook workbook, String field);
+
+	void copyFile (List<String> fileNames) throws IOException;
+	
+	void moveFile (String fileName, String targetDirectory);
+
+	List<Object[]>  writeIntoExcel (List<Object[]> errors) throws IOException;
+
 	List<Events> readingEventsTable (XSSFWorkbook workbook, ArrayList<String> eventFields) throws IOException;
 	
 	List<List<Events>> loopThroughFiles () throws IOException;
-	
-	Map<String, Integer> readingEnums (XSSFWorkbook workbook, String field);
-	
-//	void writeIntoExcel ();
 	
 }

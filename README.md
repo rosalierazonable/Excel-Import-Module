@@ -14,8 +14,19 @@
 - File Listing
 - Copy File to other directory
 - Move File to other directory
+- Exception Handling
 
 
-### Task Full Description
+## Task Full Description
+
+### Scenario
+Assume a particular directory has five subdirectories:
+- files// : for excel files
+- logs// : for error logging files
+- images// : established image directory
+- processed// : directory which holds the logging of processed excel files
+- server// : mocks the server directory where images should be moved
+
+### Architectural Flow
 
 

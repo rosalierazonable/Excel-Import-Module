@@ -2,7 +2,15 @@ package com.rosalieraz.importmodule.service;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.time.Instant;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -12,11 +20,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.poi.ss.usermodel.Cell;
-//import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
-//import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.xssf.usermodel.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.rosalieraz.importmodule.model.Events;
@@ -25,10 +31,8 @@ import com.rosalieraz.importmodule.model.Events;
 public class FileHandlingServiceImpl implements FileHandlingService {
 
 	// Files Directory Path
-	private String excelDirPath = ".\\src\\main\\resources\\static\\files\\";
-
-	@Autowired
-	private EventsUtilityService validator;
+	private String dirPath = ".\\src\\main\\resources\\static\\";
+	
 	
 	/*
 	 * Get File Extension,
@@ -48,74 +52,25 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 	
 	
 	/*
-	 * List all Excel Files inside Files Directory
+	 * List all Excel Files inside Files Directory,
+	 * Accepst path and extension paramaters to accommodate future use
+	 * to list files in other desired path
 	 */
 
 	@Override
-	public List<String> getFileList() {
+	public List<String> getFileList(String path, String extension) {
 
 		List<String> fileNames = new ArrayList<>();
 
-		File dir = new File(excelDirPath);
+		File dir = new File(path);
 		File[] fileList = dir.listFiles(); // list of files inside the files directory
 
 		for (File file : fileList) {
-			if (file.isFile() && getExtension(file.getName()).equalsIgnoreCase("xlsx"))
+			if (file.isFile() && getExtension(file.getName()).equalsIgnoreCase(extension))
 					fileNames.add(file.getName());
 		}
 
 		return fileNames; // list of file names inside the files directory
-	}
-
-	
-	
-	/*
-	 * Performs the same processes through files
-	 */
-
-	@Override
-	 public List<List<Events>> loopThroughFiles() throws IOException {
-
-		List<String> fileNames = getFileList();
-		List<List<Events>> eventsList = new ArrayList<>();
-		Map<String, Object> config; // to accommodate multiple config details in the future		
-		
-		for (String fName : fileNames) {
-
-			String excelFilePath = excelDirPath + fName;
-			FileInputStream inputStream = new FileInputStream(excelFilePath);
-
-			XSSFWorkbook workbook = new XSSFWorkbook(inputStream);
-
-			config = readingConfigDetails(workbook);
-
-			switch (config.get("Table ").toString()) {
-
-				case "Events":
-					// Set Fields so that, enum fields can be traced easier
-					ArrayList<String> eventFields = new ArrayList<>(Arrays.asList("eventId", "eventType", "eventTitle", "banner", "description", "startDate",
-																	"endDate", "regStart", "regEnd", "createDate", "updateDate", "createUserId", 
-																	"updateUserId", "isDeleted", "isInternal", "paymentFee", "rideId", "location"));
-					
-					eventsList.add(readingEventsTable(workbook, eventFields));
-					break;
-	
-				case "Members": // call corresponding reading function for members
-					break;
-	
-				case "Partners": // call corresponding reading function for partners here
-					break;
-	
-				// add cases here for additional tables	
-					
-				default:
-					break;
-
-			}
-			 
-		}
-
-		return eventsList;
 	}
 
 	
@@ -170,8 +125,146 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 	}
 
 	
+	
 	/*
-	 * Read Table Data from Data Sheet per Excel File
+	 * Reading Corresponding Enums
+	 * Parameters: workbook and the enum field to be opened
+	 */
+	
+	@Override
+	public Map<String, Integer> readingEnums (XSSFWorkbook workbook, String field) {
+		
+		XSSFSheet enumSheet = workbook.getSheet(field);
+		Map<String, Integer> enums = new HashMap<>();
+		
+		Iterator<Row> configItr = enumSheet.iterator();
+
+		while (configItr.hasNext()) {
+			XSSFRow row = (XSSFRow) configItr.next();
+			String keyStr = null;
+			Integer value = null;
+
+			keyStr = row.getCell(0).getStringCellValue();
+			value = (int) row.getCell(1).getNumericCellValue();
+		
+
+			enums.put(keyStr, value);
+		}
+		
+		return enums;
+	}
+	
+
+
+	/*
+	 * Copying processed Excel File to Processed directory
+	 */
+	
+	@Override
+	public void copyFile(List<String> fileNames) throws IOException {
+
+		SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+		Timestamp instant= Timestamp.from(Instant.now()); 
+		
+		String targetPath = ".\\src\\main\\resources\\static\\processed\\";
+		
+		File file = new File(targetPath + dateFormat.format(instant).replaceAll("[: ]", "_"));
+		// file.createNewFile();
+        boolean flag = file.mkdir();
+		
+		for(String fileName: fileNames) {
+	        if(flag) {
+	        	Path sourceFile = Paths.get(".\\src\\main\\resources\\static\\files\\" + fileName);
+	        	Path targetFile = Paths.get(targetPath + dateFormat.format(instant).replaceAll("[: ]", "_") + "\\" + fileName);
+	        	Files.copy(sourceFile, targetFile,
+	        			StandardCopyOption.REPLACE_EXISTING);
+	        }
+		}
+	}
+
+	
+
+	/*
+	 * Moving Files:
+	 * - The directory is already established: ...//images 
+	 * - Target directory is the destination directory
+	 */
+	
+	@Override
+	public void moveFile (String fileName, String targetDirectory) { 
+	
+		String srcFile = dirPath + "images//" + fileName;
+		String destFile = dirPath + targetDirectory + "//" + fileName;
+		
+		try {
+			Path temp = Files.move(Paths.get(srcFile), Paths.get(destFile), StandardCopyOption.REPLACE_EXISTING);
+			
+			if(temp != null)
+	            System.out.println("File renamed and moved successfully");
+	        else
+	            System.out.println("Failed! Something went wrong!");
+			
+		} catch (IOException e) {
+			System.out.println("Error: " + e.getMessage());
+		}
+	}
+	
+
+	
+	/*
+	 * Writing into Log Excel File
+	 * Convention: 
+	 * - FileName: Current_timestamp
+	 * - Fields inside sheet: Table name, Identifier, Field, Error
+	 */
+	
+	@Override
+	public List<Object[]> writeIntoExcel (List<Object[]> log ) throws IOException {
+		 
+		
+		  SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+		  Timestamp instant= Timestamp.from(Instant.now()); 
+	  
+		  
+		  XSSFWorkbook workbook = new XSSFWorkbook(); // create an empty workbook
+		  XSSFSheet sheet = workbook.createSheet("Error Log"); // created an empty sheet names
+	  
+		  
+			int rowCount = 0;
+			
+			// Object is used to accommodate expansion of error log files where different cellType will be inserted
+			for (Object[] errors : log) { 
+				XSSFRow row = sheet.createRow(rowCount++);
+				int columnCount = 0;
+				
+				for (Object value : errors) {
+					XSSFCell cell = row.createCell(columnCount++);
+					
+					if(value instanceof String) 
+						cell.setCellValue((String) value); 
+					else if(value instanceof Integer) 
+						cell.setCellValue((Integer) value); 
+					else if(value instanceof Boolean) 
+						cell.setCellValue((Boolean) value); 
+				}
+			}
+			
+			String logDirPath = ".\\src\\main\\resources\\static\\logs\\";
+			String filePath = logDirPath + dateFormat.format(instant).replaceAll("[: ]", "_") + ".xlsx"; // store the filepath
+			
+			FileOutputStream outputStream = new FileOutputStream(filePath); // create an output stream
+			workbook.write(outputStream); // write into the output stream
+			
+			outputStream.close();
+			workbook.close();
+			
+			return log;
+	  }
+	
+	
+	
+	/*
+	 * Read Table Data from Data Sheet per Event Excel File
 	 */
 
 	@Override
@@ -182,8 +275,6 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 		
 		Iterator<Row> iterator = dataSheet.iterator();
 		iterator.next(); // skip headers
-		
-		validator.setValidationRules("eventId");
 		
 		while (iterator.hasNext()) {
 			
@@ -217,7 +308,6 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 				switch(cellIndex) {
 					
 					case 0:
-						// if(validator.validation(0, cell.getNumericCellValue()) != null )
 							id = (int) cell.getNumericCellValue();
 						break;
 						
@@ -226,69 +316,75 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 						break;
 						
 					case 2:
-						// if(validator.validation(2, cell.getStringCellValue()) != null)
-								title = cell.getStringCellValue();
+							title = cell.getStringCellValue();
 						break;
 						
 					case 3:
-						// if(validator.validation(3, cell.getStringCellValue()) != null && cell.getCellType() != CellType.BLANK)
-								banner = cell.getStringCellValue();
+							banner = cell.getStringCellValue();
+	
+							/*
+							 * the banner cell value of excel should include the extension and must be
+							 * present in the established image directory
+							 */
+							
+							if(cell.getCellType() != CellType.BLANK)
+									moveFile(banner, "server");
 						break;
 					
 					case 4:
-						description = cell.getStringCellValue();
+							description = cell.getStringCellValue();
 						break;
 						
 					case 5: 
-						startDate = cell.getDateCellValue();
+							startDate = cell.getDateCellValue();
 						break;
 				
 					case 6: 
-						endDate = cell.getDateCellValue();
+							endDate = cell.getDateCellValue();
 						break;
 						
 					case 7: 
-						regStart= cell.getDateCellValue();
+							regStart= cell.getDateCellValue();
 						break;
 
 					case 8: 
-						regEnd = cell.getDateCellValue();
+							regEnd = cell.getDateCellValue();
 						break;
 
 					case 9: 
-						createDate = cell.getDateCellValue();
+							createDate = cell.getDateCellValue();
 						break;
 						
 					case 10: 
-						updateDate = cell.getDateCellValue();
+							updateDate = cell.getDateCellValue();
 						break;
 						
 					case 11:
-						createUserId = (int) cell.getNumericCellValue();
+							createUserId = (int) cell.getNumericCellValue();
 						break;
 						
 					case 12:
-						updateUserId = (int) cell.getNumericCellValue();
+							updateUserId = (int) cell.getNumericCellValue();
 						break;
 						
 					case 13:
-						isDeleted = (int) cell.getNumericCellValue();
+							isDeleted = (int) cell.getNumericCellValue();
 						break;
 						
 					case 14:
-						isInternal = (int) cell.getNumericCellValue();
+							isInternal = (int) cell.getNumericCellValue();
 						break;
 						
 					case 15:
-						paymentFee = (float) cell.getNumericCellValue();
+							paymentFee = (float) cell.getNumericCellValue();
 						break;
 						
 					case 16:
-						rideId = cell.getStringCellValue();
+							rideId = cell.getStringCellValue();
 						break;
 					
 					case 17:
-						location = cell.getStringCellValue();
+							location = cell.getStringCellValue();
 						break;
 						
 					default:
@@ -304,40 +400,59 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 
 	}
 
-
-	/*
-	 * Reading Corresponding Enums
-	 */
 	
+	
+	/*
+	 * Performs the same processes through files
+	 */
+
 	@Override
-	public Map<String, Integer> readingEnums(XSSFWorkbook workbook, String field) {
+	 public List<List<Events>> loopThroughFiles() throws IOException {
 		
-		XSSFSheet enumSheet = workbook.getSheet(field);
-		Map<String, Integer> enums = new HashMap<>();
+		String excelDirPath = dirPath + "files\\";
+
+		List<String> fileNames = getFileList(excelDirPath, "xlsx");
+		List<List<Events>> eventsList = new ArrayList<>();
+		Map<String, Object> config; // to accommodate multiple config details in the future		
 		
-		Iterator<Row> configItr = enumSheet.iterator();
+		for (String fName : fileNames) {
 
-		while (configItr.hasNext()) {
-			XSSFRow row = (XSSFRow) configItr.next();
-			String keyStr = null;
-			Integer value = null;
+			String excelFilePath = excelDirPath + fName;
+			FileInputStream inputStream = new FileInputStream(excelFilePath);
 
-			keyStr = row.getCell(0).getStringCellValue();
-			value = (int) row.getCell(1).getNumericCellValue();
-		
+			XSSFWorkbook workbook = new XSSFWorkbook(inputStream);
 
-			enums.put(keyStr, value);
+			config = readingConfigDetails(workbook);
+
+			switch (config.get("Table ").toString()) {
+
+				case "Events":
+					// Set Fields so that, enum fields can be traced easier
+					ArrayList<String> eventFields = new ArrayList<>(Arrays.asList("eventId", "eventType", "eventTitle", "banner", "description", "startDate",
+																	"endDate", "regStart", "regEnd", "createDate", "updateDate", "createUserId", 
+																	"updateUserId", "isDeleted", "isInternal", "paymentFee", "rideId", "location"));
+					
+					eventsList.add(readingEventsTable(workbook, eventFields));
+					break;
+	
+				case "Members": // call corresponding reading function for members
+					break;
+	
+				case "Partners": // call corresponding reading function for partners here
+					break;
+	
+				// add cases here for additional tables	
+					
+				default:
+					break;
+
+			}
+			
+			 
 		}
-		
-		return enums;
-	}
-	
-	
 
-	/*
-	 * @Override public void writeIntoExcel() {
-	 * 
-	 * 
-	 * }
-	 */
+		copyFile(fileNames);
+		return eventsList;
+	}
+
 }

@@ -19,16 +19,23 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.validation.ConstraintViolationException;
+
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.rosalieraz.importmodule.model.Events;
+import com.rosalieraz.importmodule.repository.EventsRepository;
 
 @Service
 public class FileHandlingServiceImpl implements FileHandlingService {
+	
+	@Autowired
+	EventsRepository eRepository;
 
 	// Files Directory Path
 	private String dirPath = ".\\src\\main\\resources\\static\\";
@@ -48,7 +55,6 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 		
 		return extension;
 	}
-	
 	
 	
 	/*
@@ -220,12 +226,13 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 	
 	@Override
 	public List<Object[]> writeIntoExcel (List<Object[]> log ) throws IOException {
+//	public void writeIntoExcel (List<String> log ) throws IOException {
 		
 		  SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
 		  Timestamp instant= Timestamp.from(Instant.now()); 
 	  
-		  XSSFWorkbook workbook = new XSSFWorkbook(); // create an empty workbook
-		  XSSFSheet sheet = workbook.createSheet("Error Log"); // created an empty sheet names
+		  XSSFWorkbook workbook = new XSSFWorkbook(); 
+		  XSSFSheet sheet = workbook.createSheet("Error Log"); 
 	  
 			int rowCount = 0;
 			
@@ -237,12 +244,12 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 				for (Object value : errors) {
 					XSSFCell cell = row.createCell(columnCount++);
 					
-					if(value instanceof String) 
-						cell.setCellValue((String) value); 
-					else if(value instanceof Integer) 
-						cell.setCellValue((Integer) value); 
-					else if(value instanceof Boolean) 
-						cell.setCellValue((Boolean) value); 
+						if (value instanceof String)
+							cell.setCellValue((String) value);
+						else if (value instanceof Integer)
+							cell.setCellValue((Integer) value);
+						else if (value instanceof Boolean)
+							cell.setCellValue((Boolean) value);
 				}
 			}
 			
@@ -265,13 +272,19 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 	 */
 
 	@Override
-	public List<Events> readingEventsTable (XSSFWorkbook workbook, ArrayList<String> eventFields) throws IOException {
+	public List<Object[]> readingEventsTable (XSSFWorkbook workbook, ArrayList<String> eventFields, String identifier) throws ConstraintViolationException {
 
-		List<Events> eventsList = new ArrayList<>();
 		XSSFSheet dataSheet = workbook.getSheet("Data");
-		
 		Iterator<Row> iterator = dataSheet.iterator();
 		iterator.next(); // skip headers
+		
+		
+		/*
+		 * for headers also, I added an ID header 
+		 * since there is a possibility some rows will encounter the same error
+		 */ 
+		
+		List<Object[]> errors = new ArrayList<>();
 		
 		while (iterator.hasNext()) {
 			
@@ -389,13 +402,21 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 				}
 			}
 			
-			eventsList.add(new Events(id, type, title, banner, description, startDate, endDate, regStart, regEnd, createDate, 
+			try {
+				eRepository.save(new Events(id, type, title, banner, description, startDate, endDate, regStart, regEnd, createDate, 
 						updateDate, createUserId, updateUserId, isDeleted, isInternal, paymentFee, rideId, location));
+			} catch (ConstraintViolationException e) {
+				
+				e.getConstraintViolations().forEach(v -> errors.add(new Object[] {"Events", identifier, v.getMessage()}));
+			}
+			
 		}
 		
-		return eventsList;
-
+		return errors;
 	}
+	
+	
+	
 
 	
 	
@@ -404,13 +425,14 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 	 */
 
 	@Override
-	 public List<List<Events>> loopThroughFiles() throws IOException {
+	 public void loopThroughFiles() throws IOException {
 		
 		String excelDirPath = dirPath + "files\\";
-
 		List<String> fileNames = getFileList(excelDirPath, "xlsx");
-		List<List<Events>> eventsList = new ArrayList<>();
 		Map<String, Object> config; // to accommodate multiple config details in the future		
+		
+		List<Object[]> errors = new ArrayList<>();
+		errors.add(new Object[] {"Table", "Identifier", "Error Message"}); 
 		
 		for (String fName : fileNames) {
 
@@ -429,7 +451,7 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 																	"endDate", "regStart", "regEnd", "createDate", "updateDate", "createUserId", 
 																	"updateUserId", "isDeleted", "isInternal", "paymentFee", "rideId", "location"));
 					
-					eventsList.add(readingEventsTable(workbook, eventFields));
+						errors.addAll(readingEventsTable(workbook, eventFields, config.get("Identifier").toString()));
 					break;
 	
 				case "Members": // call corresponding reading function for members
@@ -442,14 +464,11 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 					
 				default:
 					break;
-
 			}
-			
-			 
 		}
 
+		writeIntoExcel(errors);
 		copyFile(fileNames);
-		return eventsList;
 	}
 
 }

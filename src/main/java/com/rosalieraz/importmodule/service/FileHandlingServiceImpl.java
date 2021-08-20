@@ -338,7 +338,7 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 							 */
 							
 							if(cell.getCellType() != CellType.BLANK)
-									moveFile(banner, "server");
+									moveFile(banner.trim(), "server");
 						break;
 					
 					case 4:

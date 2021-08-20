@@ -166,7 +166,7 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 		SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
 		Timestamp instant= Timestamp.from(Instant.now()); 
 		
-		String targetPath = ".\\src\\main\\resources\\static\\processed\\";
+		String targetPath = dirPath + "processed\\";
 		
 		File file = new File(targetPath + dateFormat.format(instant).replaceAll("[: ]", "_"));
 		// file.createNewFile();
@@ -174,7 +174,7 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 		
 		for(String fileName: fileNames) {
 	        if(flag) {
-	        	Path sourceFile = Paths.get(".\\src\\main\\resources\\static\\files\\" + fileName);
+	        	Path sourceFile = Paths.get(dirPath + "files\\" + fileName);
 	        	Path targetFile = Paths.get(targetPath + dateFormat.format(instant).replaceAll("[: ]", "_") + "\\" + fileName);
 	        	Files.copy(sourceFile, targetFile,
 	        			StandardCopyOption.REPLACE_EXISTING);

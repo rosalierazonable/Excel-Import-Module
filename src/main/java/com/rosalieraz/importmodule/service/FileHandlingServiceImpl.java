@@ -220,16 +220,13 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 	
 	@Override
 	public List<Object[]> writeIntoExcel (List<Object[]> log ) throws IOException {
-		 
 		
 		  SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
 		  Timestamp instant= Timestamp.from(Instant.now()); 
 	  
-		  
 		  XSSFWorkbook workbook = new XSSFWorkbook(); // create an empty workbook
 		  XSSFSheet sheet = workbook.createSheet("Error Log"); // created an empty sheet names
 	  
-		  
 			int rowCount = 0;
 			
 			// Object is used to accommodate expansion of error log files where different cellType will be inserted
@@ -249,7 +246,7 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 				}
 			}
 			
-			String logDirPath = ".\\src\\main\\resources\\static\\logs\\";
+			String logDirPath = dirPath + "logs\\";
 			String filePath = logDirPath + dateFormat.format(instant).replaceAll("[: ]", "_") + ".xlsx"; // store the filepath
 			
 			FileOutputStream outputStream = new FileOutputStream(filePath); // create an output stream

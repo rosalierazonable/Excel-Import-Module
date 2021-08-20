@@ -1,11 +1,13 @@
 # Excel-Import-Module Intership Task
 
-### Tech Stack and Libraries
+### Tech Stack, APIs and Libraries
 - Spring MVC
 - SpringBoot
 - JPA
 - MySql
 - Apache POI
+- GlobalDispose
+
 
 ### Task Breakdown
 - Task/Job Scheduler

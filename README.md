@@ -30,10 +30,6 @@ Assume a particular directory has five subdirectories:
 ### Scenario/ Task Product
 Implementation of a Scheduled Import Feature that should be able to: 
 - scan all the Excel Files in the Files directory
-- read each excel file and import into the database
-  - if in case the data does not pass the validation, the error must be logged 
-     -log files must be stored inside the Logs directory, name convention: Timestamp_of_scheduled_import
-     -each log file must contain the following info: table name, identifier, field_error, error_message
-- the fields in the excel file that corresponds to an uploaded image must be read so that,
-  - the image will be moved to the pseudo server directory
+- read each excel file and import into the database: (1) if in case the data does not pass the validation, the error must be logged, (2) log files must be stored inside the Logs directory following a name convention: Timestamp_of_scheduled_import, (3) each log file must contain the following info: table name, identifier, field_error, error_message
+- the fields in the excel file that corresponds to an uploaded image must be read so that (1) the image will be moved to the pseudo server directory
 - Each processed file must be copied to the Processed directory  

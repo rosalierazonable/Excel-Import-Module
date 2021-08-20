@@ -29,6 +29,8 @@ Assume a particular directory has five subdirectories:
 - Processed// : directory which holds the logging of processed excel files
 - Server// : mocks the server directory where images should be moved
 
+![Swim Lane Architecture  - RDAK Import Module](https://user-images.githubusercontent.com/80081189/130224744-de1bb620-652a-4473-a01e-ef1b1aa8c6d3.jpg)
+
 ### Scenario/ Task Product
 Implementation of a Scheduled Import Feature that should be able to: 
 - scan all the Excel Files in the Files directory

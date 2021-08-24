@@ -29,13 +29,54 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.rosalieraz.importmodule.model.Events;
+import com.rosalieraz.importmodule.model.Partners;
+import com.rosalieraz.importmodule.model.EmergencyNumbers;
+
+import com.rosalieraz.importmodule.repository.EmergencyNumbersRepository;
+import com.rosalieraz.importmodule.repository.EventAttendanceRepository;
 import com.rosalieraz.importmodule.repository.EventsRepository;
+import com.rosalieraz.importmodule.repository.GuestAttendanceRepository;
+import com.rosalieraz.importmodule.repository.InterestsRepository;
+import com.rosalieraz.importmodule.repository.PartnersRepository;
+import com.rosalieraz.importmodule.repository.PaymentsRepository;
 
 @Service
 public class FileHandlingServiceImpl implements FileHandlingService {
 	
+	
+	/*
+	 * Dependency Injection
+	 */
+	
 	@Autowired
 	EventsRepository eRepository;
+	
+	@Autowired
+	PartnersRepository pRepository;
+	
+	@Autowired
+	EmergencyNumbersRepository eNRepository;
+	
+	@Autowired
+	PaymentsRepository paymentsRepository;
+	
+	@Autowired
+	InterestsRepository iRepository;
+	
+	@Autowired
+	EventAttendanceRepository eARepository;
+	
+	@Autowired
+	GuestAttendanceRepository gARepository;
+	
+	
+	/*
+	 * String Constants
+	 */
+	
+	private static final String IDENTIFIER = "Identifier";
+	private static final String TABLE = "Table";
+	
 
 	// Files Directory Path
 	private String dirPath = ".\\src\\main\\resources\\static\\";
@@ -226,7 +267,6 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 	
 	@Override
 	public List<Object[]> writeIntoExcel (List<Object[]> log ) throws IOException {
-//	public void writeIntoExcel (List<String> log ) throws IOException {
 		
 		  SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
 		  Timestamp instant= Timestamp.from(Instant.now()); 
@@ -268,24 +308,29 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 	
 	
 	/*
+	 * Loading Iterator
+	 */	
+	
+	@Override
+	public Iterator<Row> loadingIterator (XSSFWorkbook workbook) {
+		XSSFSheet dataSheet = workbook.getSheet("Data");
+		return dataSheet.iterator();
+	}
+	
+	
+	
+	/*
 	 * Read Table Data from Data Sheet per Event Excel File
 	 */
 
 	@Override
-	public List<Object[]> readingEventsTable (XSSFWorkbook workbook, ArrayList<String> eventFields, String identifier) throws ConstraintViolationException {
+	public List<Object[]> readingEventsTable (XSSFWorkbook workbook, ArrayList<String> eventFields, 
+			Map<String, Object> config) throws ConstraintViolationException {
 
-		XSSFSheet dataSheet = workbook.getSheet("Data");
-		Iterator<Row> iterator = dataSheet.iterator();
-		iterator.next(); // skip headers
-		
-		
-		/*
-		 * for headers also, I added an ID header 
-		 * since there is a possibility some rows will encounter the same error
-		 */ 
-		
+		Iterator<Row> iterator = loadingIterator(workbook);		
 		List<Object[]> errors = new ArrayList<>();
 		
+		iterator.next();
 		while (iterator.hasNext()) {
 			
 			Integer id = 0;
@@ -378,11 +423,11 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 						break;
 						
 					case 13:
-							isDeleted = (int) cell.getNumericCellValue();
+							isDeleted = (int) readingEnums(workbook, eventFields.get(cellIndex)).get(cell.getStringCellValue().trim());
 						break;
 						
 					case 14:
-							isInternal = (int) cell.getNumericCellValue();
+							isInternal = (int) readingEnums(workbook, eventFields.get(cellIndex)).get(cell.getStringCellValue());
 						break;
 						
 					case 15:
@@ -407,23 +452,302 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 						updateDate, createUserId, updateUserId, isDeleted, isInternal, paymentFee, rideId, location));
 			} catch (ConstraintViolationException e) {
 				
-				e.getConstraintViolations().forEach(v -> errors.add(new Object[] {"Events", identifier, v.getMessage()}));
+				e.getConstraintViolations().forEach(v -> errors.add(new Object[] {config.get(TABLE), config.get(IDENTIFIER), v.getMessage()}));
 			}
-			
 		}
 		
-		return errors;
+		if(!errors.isEmpty())
+			return errors;
+		else 
+			return null;
 	}
 	
 	
 	
+	/*
+	 * Read Table Data from Data Sheet per Partners Excel File
+	 */
+	
+	@Override
+	public List<Object[]> readingPartnersTable(XSSFWorkbook workbook, ArrayList<String> partnerFields, 
+			Map<String, Object> config) throws ConstraintViolationException {
+		
+		Iterator<Row> iterator = loadingIterator(workbook);
+		List<Object[]> errors = new ArrayList<>();
+		
+		iterator.next();
+		while (iterator.hasNext()) {
+					
+			Integer id = 0;
+			String username  = "";
+			String password  = "";
+			String code = "";
+			String name = "";
+			String email = "";
+			String image  = "";
+			String description = "";
+			Double sponsorship = (double) 0;
+			Date startDate = new Date();
+			Date endDate = new Date();
+			Integer order = 0;
+			Integer isDeleted = 0;
+			Date createDate = new Date();
+			Date updateDate = new Date();
+			Integer createUserId = 0;
+			Integer updateUserId = 0;
+			Integer isFeatured = 0;
+			
+			
+			XSSFRow row = (XSSFRow) iterator.next();
+			Iterator<Cell> cellIterator = row.cellIterator();
+			
+			while (cellIterator.hasNext()) {
+			
+				XSSFCell cell = (XSSFCell) cellIterator.next();
+				int cellIndex = cell.getColumnIndex();
+				
+				switch(cellIndex) {
+					
+					case 0:
+							id = (int) cell.getNumericCellValue();
+					break;
+					
+					case 1:
+							username = cell.getStringCellValue();
+						break;
+					
+					
+					case 2:
+							password = cell.getStringCellValue();
+						break;
+						
+					case 3:
+							code = cell.getStringCellValue();
+						break;
+						
+					case 4:
+							name = cell.getStringCellValue();
+						break;
+						
+					case 5:
+							email = cell.getStringCellValue();
+						break;
+						
+					case 6:
+						image = cell.getStringCellValue();
+						
+						if(cell.getCellType() != CellType.BLANK)
+								moveFile(image.trim(), "server");
+						
+						break;
+						
+					case 7:
+							description = cell.getStringCellValue();
+						break;
+						
+					case 8:
+							sponsorship = (double) cell.getNumericCellValue();
+						break;
+						
+					case 9:
+							startDate = cell.getDateCellValue();
+						break;
+						
+					case 10:
+							endDate = cell.getDateCellValue();
+						break;
+						
+					case 11:
+							order = (int) cell.getNumericCellValue();
+						break;
+						
+					case 12:
+							isDeleted = (int) readingEnums(workbook, partnerFields.get(cellIndex)).get(cell.getStringCellValue());
+						break;
+						
+					case 13:
+							createDate = cell.getDateCellValue();
+						break;
+						
+					case 14:
+							createUserId = (int) cell.getNumericCellValue();
+						break;
+						
+					case 15:
+							updateDate = cell.getDateCellValue();
+						break;
+						
+					case 16:
+							updateUserId = (int) cell.getNumericCellValue();
+						break;
+						
+					case 17:
+							isFeatured = (int) readingEnums(workbook, partnerFields.get(cellIndex)).get(cell.getStringCellValue().trim());
+						break;
+						
+					default:
+						break;
+				
+				}
+			}
+			
+			try {
+				
+				pRepository.save(new Partners(id, username, password, code, name, email, image, description, sponsorship, startDate, endDate, 
+												order, createUserId, updateDate, createDate, updateUserId, isDeleted, isFeatured));
+			
+			} catch (ConstraintViolationException e) {
+				e.getConstraintViolations().forEach(v -> errors.add(new Object[] {config.get(TABLE), config.get(IDENTIFIER), v.getMessage()}));
+			}
+		}
+		if(!errors.isEmpty())
+			return errors;
+		else 
+			return null;
+	}
+	
+	
+	
+	/*
+	 * Read Emergency_Numbers Data from Excel File
+	 */
+	
+	
+	@Override
+	public List<Object[]> readingEmergencyNosTable(XSSFWorkbook workbook, ArrayList<String> eNumFields, 
+			Map<String, Object> config) throws ConstraintViolationException {
+		
+		Iterator<Row> iterator = loadingIterator(workbook);
+		List<Object[]> errors = new ArrayList<>();
+		
+		iterator.next();
+		while (iterator.hasNext()) {
+			
+			Integer id = 0;
+			Integer type  = 0;
+			Integer number  = 0;
+			
+			XSSFRow row = (XSSFRow) iterator.next();
+			Iterator<Cell> cellIterator = row.cellIterator();
+			
+			while (cellIterator.hasNext()) {
+			
+				XSSFCell cell = (XSSFCell) cellIterator.next();
+				int cellIndex = cell.getColumnIndex();
+				
+				switch(cellIndex) {
+					
+					case 0:
+							id = (int) cell.getNumericCellValue();
+						break;
+	
+					case 1:
+							type = (int) readingEnums(workbook, eNumFields.get(cellIndex)).get(cell.getStringCellValue());
+						break;
+	
+					case 2:
+							number = (int) cell.getNumericCellValue(); // on design doc this is set to string but the apache poi library doesnt let double 
+							// to be casted to string and using .toString() method would still insert double value for these data
+						break;
+					
+					default:
+						break;	
+				}
+			}
+			
+			try {
+				
+				eNRepository.save(new EmergencyNumbers(id, type, number));
+			
+			} catch (ConstraintViolationException e) {
+				e.getConstraintViolations().forEach(v -> errors.add(new Object[] {config.get(TABLE), config.get(IDENTIFIER), v.getMessage()}));
+			}
+		}
+		
+		if(!errors.isEmpty())
+			return errors;
+		else 
+			return null;
+	}
+	
+	
+	
+	/*
+	 * Read Payments Data from Excel File
+	 */
+	
+	@Override
+	public List<Object[]> readingPaymentsTable(XSSFWorkbook workbook, ArrayList<String> paymentFields,
+			Map<String, Object> config) throws ConstraintViolationException {
+		
+		Iterator<Row> iterator = loadingIterator(workbook);
+		List<Object[]> errors = new ArrayList<>();
+		
+		iterator.next();
+		while (iterator.hasNext()) {
+			
+			Integer id = 0;
+			Integer type  = 0;
+			Integer number  = 0;
+			
+			XSSFRow row = (XSSFRow) iterator.next();
+			Iterator<Cell> cellIterator = row.cellIterator();
+			
+			while (cellIterator.hasNext()) {
+			
+				XSSFCell cell = (XSSFCell) cellIterator.next();
+				int cellIndex = cell.getColumnIndex();
+				
+				switch(cellIndex) {
+				
+				}
+		
+			}
+		}
+		return null;
+	}
+	
+	
+	
+	/*
+	 * Read Interests Data from Excel File
+	 */
+	
+	@Override
+	public List<Object[]> readingInterestsTable(XSSFWorkbook workbook, ArrayList<String> interestFields,
+			Map<String, Object> config) throws ConstraintViolationException {
+		return null;
+	}
+	
+	
+	
+	/*
+	 * Read Events_attendance Data from Excel File
+	 */
+	
+	@Override
+	public List<Object[]> readingEATable(XSSFWorkbook workbook, ArrayList<String> eAFields, Map<String, Object> config)
+			throws ConstraintViolationException {
+		return null;
+	}
 
+	
+	
+	/*
+	 * Read Guest_attendance Data from Excel File
+	 */
+	
+	@Override
+	public List<Object[]> readingGATable(XSSFWorkbook workbook, ArrayList<String> gAFields, Map<String, Object> config)
+			throws ConstraintViolationException {
+		return null;
+	}
 	
 	
 	/*
 	 * Performs the same processes through files
 	 */
-
+	
 	@Override
 	 public void loopThroughFiles() throws IOException {
 		
@@ -432,7 +756,7 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 		Map<String, Object> config; // to accommodate multiple config details in the future		
 		
 		List<Object[]> errors = new ArrayList<>();
-		errors.add(new Object[] {"Table", "Identifier", "Error Message"}); 
+		errors.add(new Object[] {TABLE, IDENTIFIER, "Error Message"}); 
 		
 		for (String fName : fileNames) {
 
@@ -443,32 +767,52 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 
 			config = readingConfigDetails(workbook);
 
-			switch (config.get("Table ").toString()) {
+			switch (config.get(TABLE).toString()) { 
 
 				case "Events":
-					// Set Fields so that, enum fields can be traced easier
-					ArrayList<String> eventFields = new ArrayList<>(Arrays.asList("eventId", "eventType", "eventTitle", "banner", "description", "startDate",
-																	"endDate", "regStart", "regEnd", "createDate", "updateDate", "createUserId", 
-																	"updateUserId", "isDeleted", "isInternal", "paymentFee", "rideId", "location"));
+						ArrayList<String> eventFields = new ArrayList<>(Arrays.asList("eventId", "eventType", "eventTitle", "banner", "description", "startDate",
+																		"endDate", "regStart", "regEnd", "createDate", "updateDate", "createUserId", 
+																		"updateUserId", "isDeleted", "isInternal", "paymentFee", "rideId", "location"));
+						
+						if(readingEventsTable(workbook, eventFields, config) != null)
+							errors.addAll(readingEventsTable(workbook, eventFields, config));
+					break;
+	
+				case "Partners": 
+						ArrayList<String> partnerFields = new ArrayList<>(Arrays.asList("partnerId", "username", "password", "code", "name", "email",
+																	"image", "description", "sponsorship", "startDate", "endDate", "listOrder",
+																	"isdeleted", "createDate", "updateDate", "createUserId", "updateUserId",
+																	"isFeaturedPartner"));
 					
-						errors.addAll(readingEventsTable(workbook, eventFields, config.get("Identifier").toString()));
+						if(readingPartnersTable(workbook, partnerFields, config)!= null)
+							errors.addAll(readingPartnersTable(workbook, partnerFields, config));
 					break;
 	
-				case "Members": // call corresponding reading function for members
+				case "Payments": 
 					break;
 	
-				case "Partners": // call corresponding reading function for partners here
+				case "Interests": 
+					break;	
+					
+				case "Event_Attendance": 
 					break;
-	
-				// add cases here for additional tables	
+					
+				case "Guest_Attendance": 
+					break;
+					
+				case "Emergency_Numbers": 
+						ArrayList<String> eNumFields = new ArrayList<>(Arrays.asList("numId", "type", "contactNumber"));
+						
+						if(readingEmergencyNosTable(workbook, eNumFields, config)!= null)
+							errors.addAll(readingPartnersTable(workbook, eNumFields, config));
+					break;
 					
 				default:
 					break;
 			}
 		}
 
-		writeIntoExcel(errors);
-		copyFile(fileNames);
+//		writeIntoExcel(errors);
+//		copyFile(fileNames);
 	}
-
 }

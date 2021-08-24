@@ -48,11 +48,11 @@ public class Payments {
 	private Date paymentDate;
 	
 	@NotBlank(message = "paymentFileName field should neither be empty nor blank")
-	@Column(nullable = false, columnDefinition = "text")
+	@Column(name = "paymentFileName ", nullable = false, columnDefinition = "text")
 	private String pFName;
 	
 	@NotBlank(message = "paymentDescription field should neither be empty nor blank")
-	@Column(nullable = false, columnDefinition = "text")
+	@Column(name = "paymentDescription", nullable = false, columnDefinition = "text")
 	private String pDescription;
 	
 	@NotNull(message = "nextBillingDate field is required")
@@ -88,7 +88,7 @@ public class Payments {
 			@NotNull(message = "paymentType is required") @PositiveOrZero Integer paymentType,
 			@NotBlank(message = "transactionCode field should neither be empty nor blank") String transactionCode,
 			@PositiveOrZero Integer isRecurring, @NotNull(message = "paymentDate field is required") Date paymentDate,
-			@NotBlank(message = "paymentFieldName field should neither be empty nor blank") String paymentFieldName,
+			@NotBlank(message = "paymentFileName field should neither be empty nor blank") String paymentFileName,
 			@NotBlank(message = "paymentDescription field should neither be empty nor blank") String paymentDescription,
 			@NotNull(message = "nextBillingDate field is required") Date billingDate, Date createDate, Date updateDate,
 			@NotNull(message = "createUserId field is required") Integer createUserId,
@@ -100,7 +100,7 @@ public class Payments {
 		this.transactionCode = transactionCode;
 		this.isRecurring = isRecurring;
 		this.paymentDate = paymentDate;
-		this.pFName = paymentFieldName;
+		this.pFName = paymentFileName;
 		this.pDescription = paymentDescription;
 		this.billingDate = billingDate;
 		this.createDate = createDate;
@@ -166,8 +166,8 @@ public class Payments {
 		return pFName;
 	}
 
-	public void setpFName(String paymentFieldName) {
-		this.pFName = paymentFieldName;
+	public void setpFName(String paymentFileName) {
+		this.pFName = paymentFileName;
 	}
 
 	public String getpDescription() {

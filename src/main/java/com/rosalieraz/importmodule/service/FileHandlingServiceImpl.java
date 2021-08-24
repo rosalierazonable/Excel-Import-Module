@@ -23,15 +23,19 @@ import javax.validation.ConstraintViolationException;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.rosalieraz.importmodule.model.Events;
+import com.rosalieraz.importmodule.model.GuestAttendance;
+import com.rosalieraz.importmodule.model.Interests;
 import com.rosalieraz.importmodule.model.Partners;
+import com.rosalieraz.importmodule.model.Payments;
 import com.rosalieraz.importmodule.model.EmergencyNumbers;
-
+import com.rosalieraz.importmodule.model.EventAttendance;
 import com.rosalieraz.importmodule.repository.EmergencyNumbersRepository;
 import com.rosalieraz.importmodule.repository.EventAttendanceRepository;
 import com.rosalieraz.importmodule.repository.EventsRepository;
@@ -90,6 +94,7 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 	private String dirPath = ".\\src\\main\\resources\\static\\";
 
 	
+	DataFormatter dataFormatter= new DataFormatter();
 	
 	/*
 	 * Get File Extension, It accommodates the fact that the admin may include files
@@ -153,7 +158,7 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 
 				case STRING:
 					if (i == 0) {
-						keyStr = cell.getStringCellValue();
+						keyStr = cell.getStringCellValue().trim();
 					} else {
 						value = cell.getStringCellValue();
 					}
@@ -220,7 +225,6 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 		String targetPath = dirPath + "processed\\";
 
 		File file = new File(targetPath + dateFormat.format(instant).replaceAll("[: ]", "_"));
-		// file.createNewFile();
 		boolean flag = file.mkdir();
 
 		for (String fileName : fileNames) {
@@ -275,8 +279,11 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 
 		int rowCount = 0;
 
-		// Object is used to accommodate expansion of error log files where different
-		// cellType will be inserted
+		/*
+		 * Object is used to accommodate expansion of error log files 
+		 * where different cellType will be inserted
+		 */
+		
 		for (Object[] errors : log) {
 			XSSFRow row = sheet.createRow(rowCount++);
 			int columnCount = 0;
@@ -459,10 +466,7 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 			}
 		}
 
-		if (!errors.isEmpty())
-			return errors;
-		else
-			return null;
+		return errors;
 	}
 
 	
@@ -510,81 +514,81 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 				switch (cellIndex) {
 
 				case 0:
-					id = (int) cell.getNumericCellValue();
+						id = (int) cell.getNumericCellValue();
 					break;
 
 				case 1:
-					username = cell.getStringCellValue();
+						username = cell.getStringCellValue();
 					break;
 
 				case 2:
-					password = cell.getStringCellValue();
+						password = cell.getStringCellValue();
 					break;
 
 				case 3:
-					code = cell.getStringCellValue();
+						code = cell.getStringCellValue();
 					break;
 
 				case 4:
-					name = cell.getStringCellValue();
+						name = cell.getStringCellValue();
 					break;
 
 				case 5:
-					email = cell.getStringCellValue();
+						email = cell.getStringCellValue();
 					break;
 
 				case 6:
-					image = cell.getStringCellValue();
-
-					if (cell.getCellType() != CellType.BLANK)
-						moveFile(image.trim(), "server");
+						image = cell.getStringCellValue();
+	
+						if (cell.getCellType() != CellType.BLANK)
+							moveFile(image.trim(), "server");
 
 					break;
 
 				case 7:
-					description = cell.getStringCellValue();
+						description = cell.getStringCellValue();
 					break;
 
 				case 8:
-					sponsorship = (double) cell.getNumericCellValue();
+						sponsorship = (double) cell.getNumericCellValue();
 					break;
 
 				case 9:
-					startDate = cell.getDateCellValue();
+						startDate = cell.getDateCellValue();
 					break;
 
 				case 10:
-					endDate = cell.getDateCellValue();
+						endDate = cell.getDateCellValue();
 					break;
 
 				case 11:
-					order = (int) cell.getNumericCellValue();
+						order = (int) cell.getNumericCellValue();
 					break;
 
 				case 12:
-					isDeleted = (int) readingEnums(workbook, partnerFields.get(cellIndex))
+						isDeleted = (int) readingEnums(workbook, partnerFields.get(cellIndex))
 							.get(cell.getStringCellValue());
 					break;
 
 				case 13:
-					createDate = cell.getDateCellValue();
+						createDate = cell.getDateCellValue();
 					break;
 
 				case 14:
-					createUserId = (int) cell.getNumericCellValue();
+						createUserId = (int) cell.getNumericCellValue();
 					break;
 
 				case 15:
-					updateDate = cell.getDateCellValue();
+						updateDate = cell.getDateCellValue();
 					break;
 
 				case 16:
-					updateUserId = (int) cell.getNumericCellValue();
+						updateUserId = (int) cell.getNumericCellValue();
 					break;
 
 				case 17:
-					isFeatured = (int) readingEnums(workbook, partnerFields.get(cellIndex))
-							.get(cell.getStringCellValue().trim());
+						isFeatured = (int) readingEnums(workbook, partnerFields.get(cellIndex))
+								.get(cell.getStringCellValue().trim());
 					break;
 
 				default:
@@ -604,10 +608,7 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 						v -> errors.add(new Object[] { config.get(TABLE), config.get(IDENTIFIER), v.getMessage() }));
 			}
 		}
-		if (!errors.isEmpty())
-			return errors;
-		else
-			return null;
+		return errors;
 	}
 
 	
@@ -668,11 +669,7 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 						v -> errors.add(new Object[] { config.get(TABLE), config.get(IDENTIFIER), v.getMessage() }));
 			}
 		}
-
-		if (!errors.isEmpty())
 			return errors;
-		else
-			return null;
 	}
 	
 	
@@ -690,7 +687,19 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 		iterator.next();
 		while (iterator.hasNext()) {
 
-			
+			Integer paymentId = 0;
+			Integer userId = 0;
+			Integer paymentType = 0;
+			String code = "";
+			Integer isRecurring = 0;
+			Date pDate = new Date();
+			String fileName = "";
+			String desc = "";
+			Date bDate = new Date();
+			Date createDate = new Date();
+			Date updateDate = new Date();
+			Integer createUserId = 0;
+			Integer updateUserId = 0;
 
 			XSSFRow row = (XSSFRow) iterator.next();
 			Iterator<Cell> cellIterator = row.cellIterator();
@@ -700,55 +709,84 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 				XSSFCell cell = (XSSFCell) cellIterator.next();
 				int cellIndex = cell.getColumnIndex();
 
-				switch (cellIndex) {
+				switch(cellIndex) {
 
 				case 0:
+					
+//						if(cell.getCellType() == CellType.NUMERIC)
+							paymentId = (int) cell.getNumericCellValue();
+//						else if(cell.getCellType() == CellType.STRING)
+//							paymentId = Integer.parseInt(cell.getStringCellValue());
+						
 					break;
 					
 				case 1:
+						userId = (int) cell.getNumericCellValue();
 					break;
 					
 				case 2:
+						paymentType = (int) readingEnums(workbook, paymentFields.get(cellIndex))
+								.get(cell.getStringCellValue().trim());
 					break;
 					
 				case 3:
+						code = cell.getStringCellValue();
 					break;
 					
 				case 4:
+						isRecurring = (int) readingEnums(workbook, paymentFields.get(cellIndex))
+								.get(cell.getStringCellValue().trim());
 					break;
 					
 				case 5:
+						pDate = cell.getDateCellValue();
 					break;
 					
 				case 6:
+						fileName = cell.getStringCellValue();
 					break;
 					
 				case 7:
+						desc = cell.getStringCellValue();
 					break;
 					
 				case 8:
+						bDate = cell.getDateCellValue();
 					break;
 					
 				case 9:
+						createDate = cell.getDateCellValue();
 					break;
 					
 				case 10:
+						updateDate = cell.getDateCellValue();
 					break;
 					
 				case 11:
+						createUserId = (int) cell.getNumericCellValue();
 					break;
 					
 				case 12:
+						updateUserId = (int) cell.getNumericCellValue();
 					break;
 					
 				default:
 					break;
 				
 				}
-
 			}
+			
+			try {
+			
+				paymentsRepository.save(new Payments(paymentId, userId, paymentType, code, isRecurring, pDate, fileName, desc, bDate, createDate, updateDate, createUserId, updateUserId));
+			} catch (ConstraintViolationException e) {
+				
+				e.getConstraintViolations().forEach(
+						v -> errors.add(new Object[] { config.get(TABLE), config.get(IDENTIFIER), v.getMessage() }));
+			}
+			
 		}
-		return null;
+		return errors;
 	}
 
 	
@@ -759,7 +797,82 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 	@Override
 	public List<Object[]> readingInterestsTable(XSSFWorkbook workbook, ArrayList<String> interestFields,
 			Map<String, Object> config) throws ConstraintViolationException {
-		return null;
+		
+		Iterator<Row> iterator = loadingIterator(workbook);
+		List<Object[]> errors = new ArrayList<>();
+
+		iterator.next();
+		while (iterator.hasNext()) {
+
+			Integer id = 0;
+			String name = "";
+			Integer isDeleted = 0;
+			Date createDate = new Date();
+			Date updateDate = new Date();
+			Integer createUserId = 0;
+			Integer updateUserId = 0;
+			String desc = "";
+			
+
+			XSSFRow row = (XSSFRow) iterator.next();
+			Iterator<Cell> cellIterator = row.cellIterator();
+	
+			while (cellIterator.hasNext()) {
+	
+				XSSFCell cell = (XSSFCell) cellIterator.next();
+				int cellIndex = cell.getColumnIndex();
+	
+				switch(cellIndex) {
+	
+				case 0:
+						id = (int) cell.getNumericCellValue();
+					break;
+					
+				case 1:
+						name = cell.getStringCellValue();
+					break;
+					
+				case 2:
+						isDeleted = (int) readingEnums(workbook, interestFields.get(cellIndex))
+						.get(cell.getStringCellValue().trim());
+					break;
+					
+				case 3:
+						createDate = cell.getDateCellValue();
+					break;
+					
+				case 4:
+						createUserId = (int) cell.getNumericCellValue();
+					break;
+
+				case 5:
+					updateDate = cell.getDateCellValue();
+					break;
+					
+				case 6:
+					updateUserId = (int) cell.getNumericCellValue();
+				break;
+				
+				case 7:
+					desc = cell.getStringCellValue();
+					break;
+					
+				default:
+					break;
+				}
+			}
+			
+			try {
+
+				iRepository.save(new Interests(id, name, isDeleted, createDate, createUserId, updateDate, updateUserId, desc));
+
+			} catch (ConstraintViolationException e) {
+				e.getConstraintViolations().forEach(
+						v -> errors.add(new Object[] { config.get(TABLE), config.get(IDENTIFIER), v.getMessage() }));
+			}
+		}
+		
+		return errors;
 	}
 	
 	
@@ -768,9 +881,63 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 	 */
 	
 	@Override
-	public List<Object[]> readingEATable(XSSFWorkbook workbook, ArrayList<String> eAFields, Map<String, Object> config)
-			throws ConstraintViolationException {
-		return null;
+	public List<Object[]> readingEATable(XSSFWorkbook workbook, ArrayList<String> eAFields, 
+			Map<String, Object> config) throws ConstraintViolationException {
+		
+		Iterator<Row> iterator = loadingIterator(workbook);
+		List<Object[]> errors = new ArrayList<>();
+
+		iterator.next();
+		while (iterator.hasNext()) {
+
+			Integer eventId = 0;
+			Integer userId = 0;
+			Integer paymentId = 0;
+			Date signUpDate = new Date();
+
+			XSSFRow row = (XSSFRow) iterator.next();
+			Iterator<Cell> cellIterator = row.cellIterator();
+
+			while (cellIterator.hasNext()) {
+
+				XSSFCell cell = (XSSFCell) cellIterator.next();
+				int cellIndex = cell.getColumnIndex();
+
+				switch(cellIndex) {
+					
+				case 0:
+						eventId = (int) cell.getNumericCellValue();
+					break;
+					
+				case 1:
+						userId = (int) cell.getNumericCellValue();
+					break;
+					
+				case 2:
+						paymentId = (int) cell.getNumericCellValue();
+					break;
+					
+				case 3:
+						signUpDate = cell.getDateCellValue();
+					break;
+					
+				default:
+					break;
+					
+				}
+			}
+			
+			try {
+
+				eARepository.save(new EventAttendance(eventId, userId, paymentId, signUpDate));
+
+			} catch (ConstraintViolationException e) {
+				e.getConstraintViolations().forEach(
+						v -> errors.add(new Object[] { config.get(TABLE), config.get(IDENTIFIER), v.getMessage() }));
+			}
+		}
+		
+		return errors;
 	}
 	
 	
@@ -779,9 +946,149 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 	 */
 	
 	@Override
-	public List<Object[]> readingGATable(XSSFWorkbook workbook, ArrayList<String> gAFields, Map<String, Object> config)
-			throws ConstraintViolationException {
-		return null;
+	public List<Object[]> readingGATable(XSSFWorkbook workbook, ArrayList<String> gAFields, 
+			Map<String, Object> config) throws ConstraintViolationException {
+
+		Iterator<Row> iterator = loadingIterator(workbook);
+		List<Object[]> errors = new ArrayList<>();
+
+		iterator.next();
+		while (iterator.hasNext()) {
+		
+			Integer userId = 0;
+			Integer eventId = 0;
+			Integer paymentId = 0;
+			String fName = "";
+			String lName = "";
+			String mName = "";
+			String suffix = "";
+			String mail = "";
+			String cellular = "";
+			String street = "";
+			String city = "";
+			String state = "";
+			String country = "";
+			String zipcode = "";
+			String bikeModel = "";
+			Date createDate = new Date();
+			Date updateDate = new Date();
+			Integer createUserId = 0;
+			Integer updateUserId = 0;
+			Integer createTS = 0;
+			Integer updateTS = 0;
+			
+			XSSFRow row = (XSSFRow) iterator.next();
+			Iterator<Cell> cellIterator = row.cellIterator();
+
+			while (cellIterator.hasNext()) {
+
+				XSSFCell cell = (XSSFCell) cellIterator.next();
+				int cellIndex = cell.getColumnIndex();
+
+				switch(cellIndex) {
+				
+				case 0: 
+						userId = (int) cell.getNumericCellValue();
+					break;
+					
+				case 1: 
+						fName = cell.getStringCellValue();
+					break;
+					
+				case 2: 
+						lName = cell.getStringCellValue();
+					break;
+					
+				case 3: 
+						mName = cell.getStringCellValue();
+					break;
+					
+				case 4: 
+						suffix = cell.getStringCellValue();
+					break;
+					
+				case 5: 
+						mail = cell.getStringCellValue();
+					break;
+					
+				case 6: 
+						cellular = dataFormatter.formatCellValue(cell);
+					break;
+					
+				case 7: 
+						street = cell.getStringCellValue();
+					break;
+					
+				case 8: 
+						city = cell.getStringCellValue();
+					break;
+					
+				case 9: 
+						state = cell.getStringCellValue();
+					break;
+					
+				case 10: 
+						zipcode = dataFormatter.formatCellValue(cell);
+					break;
+					
+				case 11:
+						country = cell.getStringCellValue();
+					break;
+					
+				case 12: 
+						bikeModel = cell.getStringCellValue();
+					break;
+					
+				case 13: 
+						createDate = cell.getDateCellValue();
+					break;
+					
+				case 14: 
+						createUserId = (int) cell.getNumericCellValue();
+					break;
+					
+				case 15: 
+						updateDate = cell.getDateCellValue();
+					break;
+					
+				case 16: 
+						updateUserId = (int) cell.getNumericCellValue();
+					break;
+					
+				case 17: 
+						updateTS = (int) cell.getNumericCellValue();
+					break;
+					
+				case 18: 
+						createTS = (int) cell.getNumericCellValue();
+					break;
+					
+				case 19: 
+						eventId = (int) cell.getNumericCellValue();
+					break;
+					
+				case 20: 
+						paymentId = (int) cell.getNumericCellValue();
+					break;
+					
+				default:
+					break;
+				
+				}
+			}
+			
+			try {
+
+				gARepository.save(new GuestAttendance(userId, eventId, paymentId, fName, lName, mName, suffix, mail, cellular, street, 
+							city, state, country, zipcode, bikeModel, createDate, updateDate, createUserId, updateUserId, updateTS, createTS));
+
+			} catch (ConstraintViolationException e) {
+				e.getConstraintViolations().forEach(
+						v -> errors.add(new Object[] { config.get(TABLE), config.get(IDENTIFIER), v.getMessage() }));
+			}
+		}
+		
+		return errors;
 	}
 	
 	
@@ -830,7 +1137,7 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 							"banner", DESC, "startDate", END_DATE, "regStart", "regEnd", CREATE_DATE, UPDATE_DATE,
 							CREATE_USER_ID, UPDATE_USER_ID, "isDeleted", "isInternal", "paymentFee", "rideId", "location"));
 	
-					// the reading-- function returns a list of errors, call addToErrors to evaluate if it's empty or not and do action based on it
+					// the reading[TableName] function returns a list of errors, call addToErrors to evaluate if it's empty or not and do action based on it
 					errors = addToErrors(readingEventsTable(workbook, eventFields, config), errors); 
 				break;
 
@@ -845,14 +1152,14 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 			case "Payments":
 					ArrayList<String> paymentFields = new ArrayList<>(Arrays.asList(PAYMENT_ID, U_ID, "paymentType",
 							"transactionCode", "isRecurring", "paymentDate", "paymentFileName", "paymentDescription",
-							"nextBillingDate", CREATE_DATE, END_DATE, CREATE_USER_ID, UPDATE_USER_ID));
+							"nextBillingDate", CREATE_DATE, UPDATE_DATE, CREATE_USER_ID, UPDATE_USER_ID));
 	
-					errors = addToErrors(readingPartnersTable(workbook, paymentFields, config), errors);
+					errors = addToErrors(readingPaymentsTable(workbook, paymentFields, config), errors);
 				break;
 
 			case "Interests":
-					ArrayList<String> interestFields = new ArrayList<>(Arrays.asList("interestId", "name", DESC,
-							"isDeleted", CREATE_DATE, UPDATE_DATE, CREATE_USER_ID, UPDATE_USER_ID));
+					ArrayList<String> interestFields = new ArrayList<>(Arrays.asList("interestId", "name",
+							"isDeleted", CREATE_DATE, CREATE_USER_ID, UPDATE_DATE, UPDATE_USER_ID, DESC));
 	
 					errors = addToErrors(readingInterestsTable(workbook, interestFields, config), errors);
 				break;
@@ -883,7 +1190,7 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 			}
 		}
 
-//		writeIntoExcel(errors); // error logging
-//		copyFile(fileNames); // copy files that have been processed for the current scheduled date to processed directory
+		writeIntoExcel(errors); // error logging
+		copyFile(fileNames); // copy files to processed directory
 	}
 }

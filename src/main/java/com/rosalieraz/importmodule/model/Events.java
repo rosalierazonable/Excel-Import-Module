@@ -13,7 +13,7 @@ import javax.persistence.TemporalType;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.PositiveOrZero;
-import javax.validation.constraints.Size;
+//import javax.validation.constraints.Size;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -27,23 +27,20 @@ public class Events {
 	@Column(name = "eventId", columnDefinition = "int(11)", nullable = false)
 	private Integer id;
 
-//	@NotNull(message = "eventType field is required thus, it should not be null")
 	@Column(name = "eventType", columnDefinition = "TINYINT(1) DEFAULT 0", nullable = false)
 	@PositiveOrZero
 	private Integer type;
 
 	@NotBlank(message = "eventTitle field should neither be empty nor blank")
-	@Column(name = "eventTitle", nullable = false)
-	@Size(min = 1, max = 50, message = "eventTitle field should not exceed 50 characters")
+	@Column(name = "eventTitle", nullable = false, columnDefinition = "varchar(50)")
 	private String title;
 
 	@NotBlank(message = "banner field should neither be empty nor blank")
-//	@Size(min = 1, max = 50, message = "banner field should not exceed 50 characters")
+	@Column(nullable = false, columnDefinition = "varchar(50)")
 	private String banner;
 
 	@NotBlank(message = "description field should neither be empty nor blank")
-//	@Size(min = 1, max = 250, message = "description field should not exceed 250 characters")
-	@Column(nullable = false)
+	@Column(nullable = false, columnDefinition = "varchar(250)")
 	private String description;
 
 	@NotNull(message = "startDate field is required")
@@ -94,12 +91,12 @@ public class Events {
 	private float paymentFee;
 
 	@NotBlank(message = "rideId field should neither be empty nor blank")
-	@Column(length = 100)
+	@Column(nullable = true, columnDefinition = "varchar(100)")
 	private String rideId;
 
 	
 	@NotBlank(message = "location field should neither be empty nor blank")
-	@Column(nullable = false)
+	@Column(nullable = false, columnDefinition = "varchar(50)")
 	private String location;
 
 	/*

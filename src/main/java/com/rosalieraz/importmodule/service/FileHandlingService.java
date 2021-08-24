@@ -43,6 +43,8 @@ public interface FileHandlingService {
 
 	List<Object[]> readingGATable (XSSFWorkbook workbook, ArrayList<String> gAFields, Map<String, Object> config) throws ConstraintViolationException;
 	
+	List<Object[]> addToErrors (List<Object[]> errors, List<Object[]> log);
+	
 	void loopThroughFiles () throws IOException;
 	
 }

@@ -62,9 +62,9 @@ public class Interests {
 
 
 	public Interests(Integer id, @NotBlank(message = "name field should neither be empty nor blank") String name,
-			String description, @PositiveOrZero Integer isDeleted, Date createDate, Date updateDate,
-			@NotNull(message = "createUserId field is required") Integer createUserId,
-			@NotNull(message = "updateUserId field is required") Integer updateUserId) {
+			 @PositiveOrZero Integer isDeleted, Date createDate, 
+			@NotNull(message = "createUserId field is required") Integer createUserId, Date updateDate,
+			@NotNull(message = "updateUserId field is required") Integer updateUserId, String description) {
 		super();
 		this.id = id;
 		this.name = name;

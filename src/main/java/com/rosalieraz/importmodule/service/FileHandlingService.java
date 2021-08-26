@@ -2,19 +2,18 @@ package com.rosalieraz.importmodule.service;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import javax.validation.ConstraintViolationException;
 
-import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 public interface FileHandlingService {
 	
 	/**
-	 * A method that inspects the extension of a file and returns it
+	 * A method that inspects the extension of a file and returns it. 
+	 * Also, It accommodates the fact that the admin may include files that are not of xlsx type
 	 * @param fileName is a string containing the file name with extension ex: img.jpg
 	 * @returns the extension string from the provided file name ex: .xlsx
 	 */
@@ -22,7 +21,8 @@ public interface FileHandlingService {
 	String getExtension (String fileName);
 
 	/**
-	 * A method for file listing inside a directory
+	 * List all Excel Files inside Files Directory and accepts path and extension
+	 * paramaters to accommodate future use to list files in other desired path
 	 * @param excelDirPath is the directory path where the excel files are placed
 	 * @param extension of the desired file types to list or open ex: txt
 	 * @returns list of file names with the same file type as the extension provided
@@ -32,7 +32,7 @@ public interface FileHandlingService {
 	
 	
 	/**
-	 * Reading Config Details Description
+	 * Read Configuration details from config sheets per Excel File
 	 * @param workbook created from the excel files
 	 * @returns a hashmap that contains all the details in the config sheet of each excel file
 	 * @throws IOException
@@ -48,29 +48,15 @@ public interface FileHandlingService {
 	 * @returns a hashmap containing all the enumeration options
 	 */
 	
-	
 	Map<String, Integer> readingEnums (XSSFWorkbook workbook, String field);
 
-	/**
-	 * A method for copying Excel Files that have been scanned during the current scheduled import scan
-	 * @param fileNames is a list of string containing all the filenames that were successfully opened during the import scan
-	 * @throws IOException when fileNames is null or cannot be found
-	 */
-	
-	void copyFile (List<String> fileNames) throws IOException;
-	
 	
 	/**
-	 * Mock function for moving file images from image directory to server 
-	 * @param fileName is the image file name including its extension
-	 * @param targetDirectory is the directory where the image file must be moved
-	 */
-	
-	void moveFile (String fileName, String targetDirectory);
-	
-	
-	/**
-	 * A method for Error Logging: write into error data into excel
+	 * A method for Error Logging: write into error data into excel.
+	 * Also, is responsbile for writing into Log Excel File Convention: - FileName: Current_timestamp -
+	 * Fields inside sheet: Table name, Identifier, Error message
+	 * Object is used to accommodate expansion of error log files where different
+	 * cellType will be inserted
 	 * @param errors is the list of error details including the error message from ConstraintViolationException 
 	 * that were encountered while validating the data
 	 * @return a log of excel files
@@ -79,15 +65,6 @@ public interface FileHandlingService {
 
 	List<Object[]>  writeIntoExcel (List<Object[]> errors) throws IOException;
 	
-	
-	/**
-	 * A utility method for loading a row iterator
-	 * @param workbook created for each excel files
-	 * @returns a row iterator
-	 */
-	
-	Iterator<Row> loadingIterator (XSSFWorkbook workbook);
-
 	
 	/**
 	 * A method for reading Excel Files for Events table
@@ -175,6 +152,8 @@ public interface FileHandlingService {
 	
 	/**
 	 * A utility method for keeping an error list from each table reading, preparing the list at the end of the scheduled task
+	 * Check if errors list is not empty then add to errorsList
+	 * Otherwise, do nothing
 	 * @param errors is the list of errors from each reading table function
 	 * @param log is the constantly updated list of all errors across different tables
 	 * @returns the updated list of error logs

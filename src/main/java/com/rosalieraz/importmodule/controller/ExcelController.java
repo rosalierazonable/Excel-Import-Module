@@ -15,7 +15,6 @@ public class ExcelController {
 	
 	@GetMapping("/scheduledTask")
 	public void schedTask () {
-		
 		task.importExcel();
 	}
 }

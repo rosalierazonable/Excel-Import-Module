@@ -14,7 +14,7 @@ public class ImportScheduledTask {
 	@Autowired
 	FileHandlingService fhService;
 	
-	@Scheduled(cron = "0 49 9 * * 1-5")
+	@Scheduled(cron = "${profile.cron}")
 	public void importExcel () {
 		
 		try {

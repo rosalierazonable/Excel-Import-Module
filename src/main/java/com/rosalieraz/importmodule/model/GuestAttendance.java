@@ -73,7 +73,7 @@ public class GuestAttendance {
 	
 	@NotBlank(message = "CRD1.zipcode is required")
 	@Column(name = "CRD1.zipcode", nullable = false , columnDefinition = "varchar(20)" )
-	private String zipcode; //change from string to integer 
+	private String zipcode; 
 	
 	@NotBlank(message = "bikeModel is required")
 	@Column(nullable = false, columnDefinition = "varchar(50)")

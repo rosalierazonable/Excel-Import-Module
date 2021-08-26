@@ -26,11 +26,9 @@ public class EmergencyNumbers {
 	private Integer type;
 	
 	
-//	@NotBlank(message = "contactNumber field should neither be empty nor blank")
-	@NotNull(message = "contactNumber field is required")
-	@Column(name = "contactNumber", nullable = false/* , columnDefinition = "varchar(50)" */)
-	private Integer number;
-//	private String number;
+	@NotBlank(message = "contactNumber field should neither be empty nor blank")
+	@Column(name = "contactNumber", nullable = false , columnDefinition = "varchar(50)" )
+	private String number;
 
 	
 	/*
@@ -42,7 +40,7 @@ public class EmergencyNumbers {
 	}
 	
 	public EmergencyNumbers (Integer id, @NotNull(message = "type field is required") @PositiveOrZero Integer type,
-			@NotBlank(message = "contactNumber field should neither be empty nor blank") Integer number) {
+			@NotBlank(message = "contactNumber field should neither be empty nor blank") String number) {
 		super();
 		this.id = id;
 		this.type = type;
@@ -71,11 +69,11 @@ public class EmergencyNumbers {
 		this.type = type;
 	}
 
-	public Integer getNumber() {
+	public String getNumber() {
 		return number;
 	}
 
-	public void setNumber(Integer number) {
+	public void setNumber(String number) {
 		this.number = number;
 	}
 }

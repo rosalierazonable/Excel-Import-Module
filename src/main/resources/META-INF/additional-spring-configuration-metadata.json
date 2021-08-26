@@ -1,0 +1,32 @@
+{"properties": [
+  {
+    "name": "directory.filepath",
+    "type": "java.lang.String",
+    "description": "A description for 'directory.filepath'"
+  },
+  {
+    "name": "directory.imagepath",
+    "type": "java.lang.String",
+    "description": "A description for 'directory.imagepath'"
+  },
+  {
+    "name": "directory.logpath",
+    "type": "java.lang.String",
+    "description": "A description for 'directory.logpath'"
+  },
+  {
+    "name": "directory.processedpath",
+    "type": "java.lang.String",
+    "description": "A description for 'directory.processedpath'"
+  },
+  {
+    "name": "directory.root",
+    "type": "java.lang.String",
+    "description": "A description for 'directory.root'"
+  },
+  {
+    "name": "profile.cron",
+    "type": "java.lang.String",
+    "description": "A description for 'profile.cron'"
+  }
+]}

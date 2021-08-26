@@ -71,7 +71,6 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 
 	@Autowired
 	GuestAttendanceRepository gARepository;
-
 	
 	/*
 	 * String Constants
@@ -89,7 +88,6 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 	private static final String PAYMENT_ID = "paymentId";
 	private static final String U_ID = "userId";
 
-	
 	// Files Directory Path
 	private String dirPath = ".\\src\\main\\resources\\static\\";
 
@@ -462,7 +460,7 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 			} catch (ConstraintViolationException e) {
 
 				e.getConstraintViolations().forEach(
-						v -> errors.add(new Object[] { config.get(TABLE), config.get(IDENTIFIER), v.getMessage() }));
+						v -> errors.add(new Object[] { config.get(TABLE), config.get(IDENTIFIER), v.getMessage()}));
 			}
 		}
 
@@ -628,7 +626,7 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 
 			Integer id = 0;
 			Integer type = 0;
-			Integer number = 0;
+			String number = "";
 
 			XSSFRow row = (XSSFRow) iterator.next();
 			Iterator<Cell> cellIterator = row.cellIterator();
@@ -641,18 +639,15 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 				switch (cellIndex) {
 
 				case 0:
-					id = (int) cell.getNumericCellValue();
+						id = (int) cell.getNumericCellValue();
 					break;
 
 				case 1:
-					type = (int) readingEnums(workbook, eNumFields.get(cellIndex)).get(cell.getStringCellValue());
+						type = (int) readingEnums(workbook, eNumFields.get(cellIndex)).get(cell.getStringCellValue());
 					break;
 
 				case 2:
-					number = (int) cell.getNumericCellValue(); // on design doc this is set to string but the apache poi
-																// library doesnt let double
-					// to be casted to string and using .toString() method would still insert double
-					// value for these data
+						number = dataFormatter.formatCellValue(cell); 
 					break;
 
 				default:
@@ -712,12 +707,7 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 				switch(cellIndex) {
 
 				case 0:
-					
-//						if(cell.getCellType() == CellType.NUMERIC)
-							paymentId = (int) cell.getNumericCellValue();
-//						else if(cell.getCellType() == CellType.STRING)
-//							paymentId = Integer.parseInt(cell.getStringCellValue());
-						
+						paymentId = (int) cell.getNumericCellValue();
 					break;
 					
 				case 1:
@@ -1108,7 +1098,7 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 	
 	
 	/*
-	 * Performs the same processes through files
+	 * 
 	 */
 	
 	@Override
@@ -1116,7 +1106,7 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 
 		String excelDirPath = dirPath + "files\\";
 		List<String> fileNames = getFileList(excelDirPath, "xlsx");
-		Map<String, Object> config; // to accommodate multiple config details in the future
+		Map<String, Object> config; 
 
 		List<Object[]> errors = new ArrayList<>();
 		errors.add(new Object[] { TABLE, IDENTIFIER, "Error Message" });
@@ -1137,7 +1127,6 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 							"banner", DESC, "startDate", END_DATE, "regStart", "regEnd", CREATE_DATE, UPDATE_DATE,
 							CREATE_USER_ID, UPDATE_USER_ID, "isDeleted", "isInternal", "paymentFee", "rideId", "location"));
 	
-					// the reading[TableName] function returns a list of errors, call addToErrors to evaluate if it's empty or not and do action based on it
 					errors = addToErrors(readingEventsTable(workbook, eventFields, config), errors); 
 				break;
 
@@ -1190,7 +1179,7 @@ public class FileHandlingServiceImpl implements FileHandlingService {
 			}
 		}
 
-		writeIntoExcel(errors); // error logging
-		copyFile(fileNames); // copy files to processed directory
+		writeIntoExcel(errors); 
+		copyFile(fileNames); 
 	}
 }
